@@ -4,11 +4,9 @@
 
 #define NUM_ADC 2
 
-#define DUMMY_ADDRESS 0xAFFA
+#define DUMMY_ADDRESS 0x0001
 
 uint16_t dma_adc_raw[NUM_ADC] = {0};
-
-static uint8_t dummy_request = 0;
 
 static uint8_t request_received = 0;
 
@@ -18,10 +16,6 @@ void ppp_rx_cplt_callback(void)
 	if(pbu16[0] == DUMMY_ADDRESS)
 	{
 		request_received = 1;
-	}
-	else
-	{
-		dummy_request = 1;
 	}
 }
 
@@ -67,12 +61,6 @@ int main(void)
 			int num_bytes = PPP_stuff((uint8_t*)uart_tx_buf, sizeof(uart_tx_buf), uart_stuff_buf, sizeof(uart_stuff_buf));
 			m_uart_tx_start(&m_huart2, uart_stuff_buf, num_bytes);
 			request_received = 0;
-		}
-
-		if(dummy_request != 0)
-		{
-			m_uart_tx_start(&m_huart2, (uint8_t*)"FUCK\r\n", 6);
-			dummy_request = 0;
 		}
 
 		if(tick - led_ts > 1000)
