@@ -3,7 +3,7 @@
 
 
 
-
+static uint32_t tick = 0;
 int main(void)
 {
 	HAL_Init();
@@ -14,9 +14,10 @@ int main(void)
 	MX_USART2_UART_Init();
 
 	uint32_t uart_tx_ts = 0;
+	uint32_t led_ts = 0;
 	while (1)
 	{
-		uint32_t tick = HAL_GetTick();
+		tick = HAL_GetTick();
 
 		if( (tick - uart_tx_ts) > 15)
 		{
@@ -24,6 +25,13 @@ int main(void)
 			m_uart_tx_start(&m_huart2, (uint8_t*)"Hello\n", 6);
 		}
 
+
+
+		if(tick - led_ts > 333)
+		{
+			led_ts = tick;
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+		}
 	}
 }
 
