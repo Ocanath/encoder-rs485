@@ -16,6 +16,7 @@
 #define RXNE_BIT 	(1 << 5)
 #define TXE_BIT		(1 << 7)
 #define IDLE_BIT	(1 << 4)
+#define TC_BIT		(1 << 6)
 
 /*CR1 bits*/
 #define TXEIE		(1 << 7)
@@ -66,7 +67,7 @@ void m_uart_it_handler(uart_it_t * h, void (*callback)(uart_it_t * h) )
 	int rxne = (isrflags & RXNE_BIT) != 0;		//check if there's bytes in the queue
 	int txe = (isrflags & TXE_BIT) != 0;		//check if the tx queue is ready to receive
 	int idle = (isrflags & IDLE_BIT) != 0;		//check if the rx frame has ended (idle)
-
+	int tc = (isrflags & TC_BIT) != 0;			//check if the Last data has been transmitted from the Shift Register
 	if(rxne != 0)	//if there's stuff in the buffer
 	{
 		uint8_t nb = rdr & 0x00FF;
@@ -89,14 +90,19 @@ void m_uart_it_handler(uart_it_t * h, void (*callback)(uart_it_t * h) )
 	}
 	else if (h->tx_idx >= h->bytes_to_send)	//currently ALWAYS writes to CR1 masking tx interrupts. This is something a guard against interrupt storms. Likely unnecessary; only needs to be written once
 	{
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 0);
 		h->tx_idx = 0;
 		h->bytes_to_send = 0;
 		h->Instance->CR1 &= ~TXEIE;	//be sure to cancel tx interrupts if you don't want to tx, otherwise they'll trigger an interrupt storm
 	}
 
+	if(tc != 0)
+	{
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 0);
+	}
+
 	h->Instance->ICR |=  ICR_CLEAR_ALL;	//clear all remaining interrupt flags to avoid a storm
 }
+
 
 void m_uart_tx_start(uart_it_t * h, uint8_t * buf, int size)
 {

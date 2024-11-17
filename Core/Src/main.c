@@ -22,12 +22,9 @@ int main(void)
 		if( (tick - uart_tx_ts) > 5)
 		{
 			uart_tx_ts = tick;
-
-
-			m_uart_tx_start(&m_huart2, (uint8_t*)"Hello\r\n", 6);
+			m_uart_tx_start(&m_huart2, (uint8_t*)"Hello\r\n", 7);
 
 		}
-
 
 
 		if(tick - led_ts > 1000)

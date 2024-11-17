@@ -155,6 +155,7 @@ void MX_USART2_UART_Init(void)
 	/* USER CODE BEGIN USART2_Init 2 */
 	USART2->CR1 |= (1 << 5) | (1 << 7) | (1 << 2) | (1 << 3);       //enable rxneie, txeie, RE and TE
 	USART2->CR1 &= ~(1 << 7);       //disable TX interrupt
+	USART2->CR1 |= (1 << 6);       //enable Transmit Complete interrupt
 	USART2->CR1 |= (1 << 4);        //enable IDLE interrupt
 	/* USER CODE END USART2_Init 2 */
 
@@ -202,14 +203,14 @@ void MX_GPIO_Init(void)
 	GPIO_InitStruct.Pin = GPIO_PIN_6;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 	/*Configure GPIO pin : PB7 */
 	GPIO_InitStruct.Pin = GPIO_PIN_7;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 	/* USER CODE BEGIN MX_GPIO_Init_2 */
