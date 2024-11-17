@@ -153,7 +153,9 @@ void MX_USART2_UART_Init(void)
 		Error_Handler();
 	}
 	/* USER CODE BEGIN USART2_Init 2 */
-
+	USART2->CR1 |= (1 << 5) | (1 << 7) | (1 << 2) | (1 << 3);       //enable rxneie, txeie, RE and TE
+	USART2->CR1 &= ~(1 << 7);       //disable TX interrupt
+	USART2->CR1 |= (1 << 4);        //enable IDLE interrupt
 	/* USER CODE END USART2_Init 2 */
 
 }

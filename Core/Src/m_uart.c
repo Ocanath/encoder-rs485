@@ -89,6 +89,7 @@ void m_uart_it_handler(uart_it_t * h, void (*callback)(uart_it_t * h) )
 	}
 	else if (h->tx_idx >= h->bytes_to_send)	//currently ALWAYS writes to CR1 masking tx interrupts. This is something a guard against interrupt storms. Likely unnecessary; only needs to be written once
 	{
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 0);
 		h->tx_idx = 0;
 		h->bytes_to_send = 0;
 		h->Instance->CR1 &= ~TXEIE;	//be sure to cancel tx interrupts if you don't want to tx, otherwise they'll trigger an interrupt storm
@@ -99,6 +100,7 @@ void m_uart_it_handler(uart_it_t * h, void (*callback)(uart_it_t * h) )
 
 void m_uart_tx_start(uart_it_t * h, uint8_t * buf, int size)
 {
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 1);
 	h->tx_idx = 0;
 	h->bytes_to_send = size;
 	h->tx_buf = buf;

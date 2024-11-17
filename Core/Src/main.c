@@ -19,15 +19,18 @@ int main(void)
 	{
 		tick = HAL_GetTick();
 
-		if( (tick - uart_tx_ts) > 15)
+		if( (tick - uart_tx_ts) > 5)
 		{
 			uart_tx_ts = tick;
-			m_uart_tx_start(&m_huart2, (uint8_t*)"Hello\n", 6);
+
+
+			m_uart_tx_start(&m_huart2, (uint8_t*)"Hello\r\n", 6);
+
 		}
 
 
 
-		if(tick - led_ts > 333)
+		if(tick - led_ts > 1000)
 		{
 			led_ts = tick;
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
