@@ -1,6 +1,7 @@
 #include "init.h"
 #include "m_uart.h"
 #include "PPP.h"
+#include "fds.h"
 
 #define NUM_ADC 2
 
@@ -10,10 +11,11 @@ uint16_t dma_adc_raw[NUM_ADC] = {0};
 
 static uint8_t request_received = 0;
 
+
 void ppp_rx_cplt_callback(void)
 {
 	uint16_t * pbu16 = (uint16_t*)(&m_huart2.ppp_unstuff_buf[0]);
-	if(pbu16[0] == DUMMY_ADDRESS)
+	if(pbu16[0] == fs_settings.address)
 	{
 		request_received = 1;
 	}
@@ -31,11 +33,24 @@ uint16_t get_checksum16(uint16_t* arr, int size)
 	return -checksum;
 }
 
+/*
+ * Helper function to load all the fds_mp params
+ * Must go before CAN init for can ID to work properly
+ * */
+void load_flash_params(void)
+{
+	if(is_page_empty(sizeof(fs_settings)/sizeof(uint32_t)) == 0)
+		m_read_flash((uint32_t*)&fs_settings,sizeof(fds_t)/sizeof(uint32_t));
+	else
+		m_write_flash((uint64_t*)&fs_settings,sizeof(fds_t)/sizeof(uint64_t));
+}
+
 
 int main(void)
 {
 	HAL_Init();
 	SystemClock_Config();
+	load_flash_params();	//read, write default. load before UART
 	MX_GPIO_Init();
 	MX_DMA_Init();
 	MX_ADC1_Init();
@@ -63,7 +78,7 @@ int main(void)
 			request_received = 0;
 		}
 
-		if(tick - led_ts > 1000)
+		if(tick - led_ts > 333)
 		{
 			led_ts = tick;
 			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);

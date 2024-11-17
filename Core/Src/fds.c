@@ -5,7 +5,17 @@
  *      Author: Ocanath
  */
 #include "fds.h"
-#define LAST_PAGE 63
+#define LAST_PAGE 15
+
+fds_t fs_settings = {
+		.address = 0,
+		.sin_min = 0,
+		.sin_max = 0,
+		.cos_min = 0,
+		.cos_max = 0,
+		.oerr = 0,
+		.baud = 921600
+};
 
 
 /*

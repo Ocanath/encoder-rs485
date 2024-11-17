@@ -9,6 +9,20 @@
 #define INC_FDS_H_
 #include "init.h"
 
+
+typedef struct fds_t
+{
+	uint16_t address;
+	uint16_t sin_min;
+	uint16_t sin_max;
+	uint16_t cos_min;
+	uint16_t cos_max;
+	uint16_t oerr;
+	uint32_t baud;
+}fds_t;
+
+extern fds_t fs_settings;
+
 /*block erases the last page of memory and writes whatever shit you like to it.
  *
  * Note: calling this with words = NULL and num_words = 0
