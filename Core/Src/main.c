@@ -5,8 +5,6 @@
 
 #define NUM_ADC 2
 
-#define DUMMY_ADDRESS 0x0001
-
 uint16_t dma_adc_raw[NUM_ADC] = {0};
 
 static uint8_t request_received = 0;
@@ -69,7 +67,7 @@ int main(void)
 
 		if(request_received != 0)
 		{
-			uart_tx_buf[0] = DUMMY_ADDRESS;
+			uart_tx_buf[0] = fs_settings.address;
 			uart_tx_buf[1] = dma_adc_raw[0];
 			uart_tx_buf[2] = dma_adc_raw[1];
 			uart_tx_buf[3] = get_checksum16(uart_tx_buf, 3);
