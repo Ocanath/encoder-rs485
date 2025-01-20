@@ -49,6 +49,19 @@ __weak void ppp_rx_cplt_callback(void)
 
 }
 
+
+/*
+ *
+ * */
+void m_uart_enable_interrupt_flags(uart_it_t * h)
+{
+	h->Instance->CR1 |= (1 << 5) | (1 << 7) | (1 << 2) | (1 << 3);       //enable rxneie, txeie, RE and TE
+	h->Instance->CR1 &= ~(1 << 7);       //disable TX interrupt
+	h->Instance->CR1 |= (1 << 6);       //enable Transmit Complete interrupt
+	h->Instance->CR1 |= (1 << 4);        //enable IDLE interrupt
+}
+
+
 /*
  * Baremetal uart handler.
  *

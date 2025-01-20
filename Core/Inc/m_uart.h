@@ -44,6 +44,7 @@ extern uint8_t gl_ppp_stuff_buf[32];
 extern uart_it_t m_huart2;
 
 //void m_uart_it_handler(uart_it_t * h);
+void m_uart_enable_interrupt_flags(uart_it_t * h);
 void m_uart_it_handler(uart_it_t * h, void (*callback)(uart_it_t * h) );
 void m_uart_tx_start(uart_it_t * h, uint8_t * buf, int size);
 void m_uart2_rx_cplt_callback(uart_it_t * h);

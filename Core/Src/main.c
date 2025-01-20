@@ -53,7 +53,7 @@ int main(void)
 	MX_DMA_Init();
 	MX_ADC1_Init();
 	MX_USART2_UART_Init();
-
+	m_uart_enable_interrupt_flags(&m_huart2);
 	uint32_t led_ts = 0;
 
 	uint16_t uart_tx_buf[1+NUM_ADC+1] = {0};	//8 bytes. Two address, four payload, two checksum
