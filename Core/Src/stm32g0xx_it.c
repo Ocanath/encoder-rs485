@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "uart_mem.h"
+#include "dartt_map.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -189,5 +190,19 @@ void USART2_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+void HAL_IncTick(void)
+{
+	gl_dp.tick += (uint32_t)uwTickFreq;
+}
 
+/**
+ * @brief Provides a tick value in millisecond.
+ * @note This function is declared as __weak to be overwritten in case of other
+ *       implementations in user file.
+ * @retval tick value
+ */
+uint32_t HAL_GetTick(void)
+{
+	return gl_dp.tick;
+}
 /* USER CODE END 1 */

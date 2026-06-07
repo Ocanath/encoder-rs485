@@ -29,7 +29,7 @@ dartt_mem_t gl_dp_alias = {
 		.size = sizeof(gl_dp)
 };
 
-
+enum {NO_ACTION = 0, RESTART = 2, BOOTLOAD = 6, LED_ON = 3, LED_OFF = 4};
 
 /*
  * Helper function to load all the fds_mp params
@@ -43,6 +43,35 @@ void load_flash_params(void)
 		m_write_flash((uint64_t*)&gl_dp.fds,sizeof(fds_t)/sizeof(uint64_t));
 }
 
+void reset_handler(void)
+{
+	if(gl_dp.action_flag == RESTART)
+	{
+		NVIC_SystemReset();
+	}
+}
+
+void bootload_handler(void)
+{
+	if(gl_dp.action_flag == BOOTLOAD)
+	{
+		//Do ram stuff, magic word
+		NVIC_SystemReset();
+	}
+}
+
+void led_handler(void)
+{
+	if(gl_dp.action_flag == LED_ON)
+	{
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 1);
+	}
+	else if(gl_dp.action_flag == LED_OFF)
+	{
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 0);
+	}
+}
+
 int main(void)
 {
 	HAL_Init();
@@ -53,13 +82,10 @@ int main(void)
 	MX_DMA_Init();
 	MX_ADC1_Init();
 	MX_USART2_UART_Init();
-	uint32_t led_ts = 0;
 
 
 	while (1)
 	{
-		uint32_t tick = HAL_GetTick();
-
 		HAL_ADC_Start_DMA(&hadc1, (uint32_t * )gl_dp.dma_adc_raw, NUM_ADC);
 
 		/*Handle DARTT over UART*/
@@ -67,7 +93,6 @@ int main(void)
 		{
 			if(m_huart2.rx_decoded.buf[0] == dartt_misc_address)
 			{
-
 				//TODO: guard this in a dma disable
 				gl_dp.angle = theta_rel_14b();
 				//TODO: guard above
@@ -108,10 +133,13 @@ int main(void)
 			m_huart2.rx_decoded.length = 0;
 		}
 
-		if(tick - led_ts > 333)
+		if(gl_dp.action_flag != NO_ACTION)
 		{
-			led_ts = tick;
-			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+			reset_handler();
+			bootload_handler();
+			led_handler();
+
+			gl_dp.action_flag = NO_ACTION;
 		}
 	}
 }
