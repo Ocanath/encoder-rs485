@@ -7,6 +7,7 @@
 
 #include "init.h"
 #include "fds.h"
+#include "uart_mem.h"
 
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
@@ -154,6 +155,20 @@ void MX_USART2_UART_Init(void)
 	{
 		Error_Handler();
 	}
+
+
+	init_dma_uart(
+			&m_huart2,
+			huart2.Instance,
+			hdma_usart2_rx.Instance,
+			hdma_usart2_tx.Instance,
+			gl_uart2_rx_buf,
+			sizeof(gl_uart2_rx_buf),
+			gl_uart2_rx_decoded_buf,
+			sizeof(gl_uart2_rx_decoded_buf),
+			gl_uart2_tx_buf,
+			sizeof(gl_uart2_tx_buf)
+	);
 }
 
 /**

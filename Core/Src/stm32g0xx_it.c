@@ -22,6 +22,7 @@
 #include "stm32g0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "uart_mem.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -165,10 +166,11 @@ void DMA1_Channel2_3_IRQHandler(void)
 	/* USER CODE BEGIN DMA1_Channel2_3_IRQn 0 */
 
 	/* USER CODE END DMA1_Channel2_3_IRQn 0 */
-	HAL_DMA_IRQHandler(&hdma_usart2_rx);
-	HAL_DMA_IRQHandler(&hdma_usart2_tx);
+//	HAL_DMA_IRQHandler(&hdma_usart2_rx);
+//	HAL_DMA_IRQHandler(&hdma_usart2_tx);
 	/* USER CODE BEGIN DMA1_Channel2_3_IRQn 1 */
-
+	m_uart_rxdma_handler(DMA1, hdma_usart2_rx.ChannelIndex);
+	m_uart_txdma_handler(DMA1, hdma_usart2_tx.ChannelIndex);
 	/* USER CODE END DMA1_Channel2_3_IRQn 1 */
 }
 
@@ -180,9 +182,9 @@ void USART2_IRQHandler(void)
 	/* USER CODE BEGIN USART2_IRQn 0 */
 
 	/* USER CODE END USART2_IRQn 0 */
-	HAL_UART_IRQHandler(&huart2);
+//	HAL_UART_IRQHandler(&huart2);
 	/* USER CODE BEGIN USART2_IRQn 1 */
-
+	m_uart_it_handler(&m_huart2);
 	/* USER CODE END USART2_IRQn 1 */
 }
 
