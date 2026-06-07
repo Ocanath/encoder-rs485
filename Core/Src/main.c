@@ -72,12 +72,96 @@ void led_handler(void)
 	}
 }
 
+
+
+/*
+ * Event handler for dartt.
+ * Designed to be a polling handler in the primary event loop, and synchronous with data loads in the dartt_map
+ * I.e. do not call this in an interrupt handler
+ *
+ * TODO: Consider passing primary address and memory alias as function parameters, and then using this as a fully portable function in its own TU for vendorability
+ * Steps for this:
+ * 		1. Update signature with motor_address, misc_address, dartt_map_alias (dartt_mem_t *)
+ * 		2. remove encoder specific theta_rel_14b() callsites. Move these to main event loop. Enable full circular dma and no interrupts. Test to make sure not choked
+ * 		3. Move to a dma_uart_dartt TU
+ * 		4. Replace motor parser with a weak function which has the map alias (dartt_mem_t *) and (dma_uart_t*) in the signature - add a note that the dartt_mem_t is a 'context pointer' you can cast the ->buf to the defined struct map type for member access if desired
+ * */
+int handle_serial_dartt(dma_uart_t * uart, unsigned char misc_address)
+{
+	if(uart->rx_decoded.length == 0)
+	{
+		return 1;	//TODO: enumerate codes. This is a 'skip, no new message'
+	}
+
+	//both dartt misc and dartt motor messages have [address][payload][crc] for TYPE_SERIAL so F2P is correct for CRC check and payload parsing
+	payload_layer_msg_t * pld = &uart->rx_pld_msg;
+	int rc = dartt_frame_to_payload(&uart->rx_decode_alias, TYPE_SERIAL_MESSAGE, PAYLOAD_ALIAS, pld);
+	if(rc != DARTT_PROTOCOL_SUCCESS)
+	{
+		return rc;
+	}
+	uart->rx_decoded.length = 0;	//after f2p called, invalidate the original cobs decoded message. dartt frame is stale too, but not necessary to invalidate. pld contains the proper message
+
+	if(pld->address == misc_address)
+	{
+		//TODO: guard this in a dma disable
+		gl_dp.angle = theta_rel_14b();
+		//TODO: guard above
+
+		rc = dartt_parse_general_message(pld, TYPE_SERIAL_MESSAGE, &gl_dp_alias, &uart->tx_buf_alias);
+		if(rc != DARTT_PROTOCOL_SUCCESS)
+		{
+			return rc;
+		}
+		if(uart->tx_buf_alias.len != 0)
+		{
+			uart->tx_mem.length = uart->tx_buf_alias.len;
+			rc = cobs_encode_single_buffer(&uart->tx_mem);
+			if(rc != COBS_SUCCESS)
+			{
+				return rc;
+			}
+			rc = DARTT_PROTOCOL_SUCCESS;	//this will get compiled out - kept for function contract clarity
+			m_uart_dma_transmit(uart);
+		}
+	}
+	else if(pld->address == gl_dp.fds.address)
+	{
+		//TODO: Guard this with some dma disable?
+		gl_dp.angle = theta_rel_14b();
+		//TODO: see above
+		dartt_buffer_t * txb = &uart->tx_buf_alias;
+		txb->len = 0;
+		txb->buf[txb->len++] = MASTER_MOTOR_ADDRESS;
+		txb->buf[txb->len++] = gl_dp.angle & 0xFF;
+		txb->buf[txb->len++] = ((gl_dp.angle & 0xFF00) >> 8);
+		rc = append_crc(txb);
+		if(rc != DARTT_PROTOCOL_SUCCESS)
+		{
+			return rc;
+		}
+		uart->tx_mem.length = txb->len;
+		rc = cobs_encode_single_buffer(&uart->tx_mem);
+		if(rc != COBS_SUCCESS)
+		{
+			return rc;
+		}
+		m_uart_dma_transmit(uart);
+	}
+	else
+	{
+		rc = DARTT_ADDRESS_FILTERED;
+	}
+
+	return rc;
+}
+
 int main(void)
 {
 	HAL_Init();
 	SystemClock_Config();
 	load_flash_params();	//read, write default. load before UART
-	uint32_t dartt_misc_address = dartt_get_complementary_address((uint32_t)gl_dp.fds.address);
+	unsigned char dartt_misc_address = dartt_get_complementary_address((uint32_t)gl_dp.fds.address);
 	MX_GPIO_Init();
 	MX_DMA_Init();
 	MX_ADC1_Init();
@@ -90,49 +174,7 @@ int main(void)
 		HAL_ADC_Start_DMA(&hadc1, (uint32_t * )gl_dp.dma_adc_raw, NUM_ADC);
 
 		/*Handle DARTT over UART*/
-		if(m_huart2.rx_decoded.length != 0)
-		{
-			if(m_huart2.rx_decoded.buf[0] == dartt_misc_address)
-			{
-				//TODO: guard this in a dma disable
-				gl_dp.angle = theta_rel_14b();
-				//TODO: guard above
-
-				int rc = dartt_frame_to_payload(&m_huart2.rx_decode_alias, TYPE_SERIAL_MESSAGE, PAYLOAD_ALIAS, &m_huart2.rx_pld_msg);
-				if(rc == DARTT_PROTOCOL_SUCCESS)
-				{
-					rc = dartt_parse_general_message(&m_huart2.rx_pld_msg, TYPE_SERIAL_MESSAGE, &gl_dp_alias, &m_huart2.tx_buf_alias);
-				}
-				if(rc == DARTT_PROTOCOL_SUCCESS)
-				{
-					if(m_huart2.tx_buf_alias.len != 0)
-					{
-						m_huart2.tx_mem.length = m_huart2.tx_buf_alias.len;
-						rc = cobs_encode_single_buffer(&m_huart2.tx_mem);
-						if(rc == COBS_SUCCESS)
-						{
-							m_uart_dma_transmit(&m_huart2);
-						}
-					}
-				}
-			}
-			else if(m_huart2.rx_decoded.buf[0] == gl_dp.fds.address)
-			{
-				//TODO: Guard this with some dma disable?
-				gl_dp.angle = theta_rel_14b();
-				//TODO: see above
-				dartt_buffer_t * txb = &m_huart2.tx_buf_alias;
-				txb->len = 0;
-				txb->buf[txb->len++] = MASTER_MOTOR_ADDRESS;
-				txb->buf[txb->len++] = gl_dp.angle & 0xFF;
-				txb->buf[txb->len++] = ((gl_dp.angle & 0xFF00) >> 8);
-				append_crc(txb);
-				m_huart2.tx_mem.length = txb->len;
-				cobs_encode_single_buffer(&m_huart2.tx_mem);
-				m_uart_dma_transmit(&m_huart2);
-			}
-			m_huart2.rx_decoded.length = 0;
-		}
+		handle_serial_dartt(&m_huart2, dartt_misc_address);
 
 		if(gl_dp.action_flag != NO_ACTION)
 		{

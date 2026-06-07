@@ -42,6 +42,6 @@ int32_t theta_rel_14b(void)
 	 * sin phase compensator term.
 	 */
 	sinVal = (sinVal*16384 - cosVal*oerr_total_nsin)/oerr_total_ncos;	//this is dangerous iff gl_oerr_total == PI_12B/2 (divide by 0 error). however this should be well outside the actual range of achievable values for this number
-	return atan2_14b(sinVal,cosVal) - gl_dp.fds.offset;
+	return wrap_2pi_fixed(atan2_14b(sinVal,cosVal) - gl_dp.fds.offset, TWO_PI_14B);
 }
 
