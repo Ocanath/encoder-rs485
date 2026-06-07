@@ -82,10 +82,11 @@ int main(void)
 	MX_DMA_Init();
 	MX_ADC1_Init();
 	MX_USART2_UART_Init();
-
+	eval_encoder_params();
 
 	while (1)
 	{
+		//TODO: restructure this so that latency is minimized.
 		HAL_ADC_Start_DMA(&hadc1, (uint32_t * )gl_dp.dma_adc_raw, NUM_ADC);
 
 		/*Handle DARTT over UART*/
