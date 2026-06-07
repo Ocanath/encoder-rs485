@@ -4,15 +4,14 @@
 #include "dartt.h"
 #include "cobs.h"
 #include "uart_mem.h"
+#include "tle_encoder.h"
 
-#define NUM_ADC 2
 
-uint16_t dma_adc_raw[NUM_ADC] = {0};
+
 
 dartt_map_t gl_dp = {
 		.angle = 0,
-		.sin = 0,
-		.cos = 0,
+		.dma_adc_raw = {0},
 		.fds = {
 				.address = 0,
 				.sin_min = 0,
@@ -30,6 +29,8 @@ dartt_mem_t gl_dp_alias = {
 		.size = sizeof(gl_dp)
 };
 
+
+
 /*
  * Helper function to load all the fds_mp params
  * Must go before CAN init for can ID to work properly
@@ -41,7 +42,6 @@ void load_flash_params(void)
 	else
 		m_write_flash((uint64_t*)&gl_dp.fds,sizeof(fds_t)/sizeof(uint64_t));
 }
-
 
 int main(void)
 {
@@ -55,17 +55,23 @@ int main(void)
 	MX_USART2_UART_Init();
 	uint32_t led_ts = 0;
 
+
 	while (1)
 	{
 		uint32_t tick = HAL_GetTick();
 
-		HAL_ADC_Start_DMA(&hadc1, (uint32_t * )dma_adc_raw, NUM_ADC);
+		HAL_ADC_Start_DMA(&hadc1, (uint32_t * )gl_dp.dma_adc_raw, NUM_ADC);
 
 		/*Handle DARTT over UART*/
 		if(m_huart2.rx_decoded.length != 0)
 		{
 			if(m_huart2.rx_decoded.buf[0] == dartt_misc_address)
 			{
+
+				//TODO: guard this in a dma disable
+				gl_dp.angle = theta_rel_14b();
+				//TODO: guard above
+
 				int rc = dartt_frame_to_payload(&m_huart2.rx_decode_alias, TYPE_SERIAL_MESSAGE, PAYLOAD_ALIAS, &m_huart2.rx_pld_msg);
 				if(rc == DARTT_PROTOCOL_SUCCESS)
 				{
@@ -83,6 +89,21 @@ int main(void)
 						}
 					}
 				}
+			}
+			else if(m_huart2.rx_decoded.buf[0] == gl_dp.fds.address)
+			{
+				//TODO: Guard this with some dma disable?
+				gl_dp.angle = theta_rel_14b();
+				//TODO: see above
+				dartt_buffer_t * txb = &m_huart2.tx_buf_alias;
+				txb->len = 0;
+				txb->buf[txb->len++] = MASTER_MOTOR_ADDRESS;
+				txb->buf[txb->len++] = gl_dp.angle & 0xFF;
+				txb->buf[txb->len++] = ((gl_dp.angle & 0xFF00) >> 8);
+				append_crc(txb);
+				m_huart2.tx_mem.length = txb->len;
+				cobs_encode_single_buffer(&m_huart2.tx_mem);
+				m_uart_dma_transmit(&m_huart2);
 			}
 			m_huart2.rx_decoded.length = 0;
 		}
