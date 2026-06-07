@@ -1,9 +1,6 @@
 [submodule "external/dartt-protocol"]
 	path = external/dartt-protocol
 	url = https://github.com/ocanath/dartt-protocol
-[submodule "external/byte-stuffing"]
-	path = external/byte-stuffing
-	url = https://github.com/ocanath/byte-stuffing
 [submodule "external/stm32-dma-cobs-uart"]
 	path = external/stm32-dma-cobs-uart
 	url = https://github.com/ocanath/stm32-dma-cobs-uart
