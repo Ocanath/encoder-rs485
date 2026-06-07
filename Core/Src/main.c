@@ -96,11 +96,11 @@ int handle_serial_dartt(dma_uart_t * uart, unsigned char misc_address)
 	//both dartt misc and dartt motor messages have [address][payload][crc] for TYPE_SERIAL so F2P is correct for CRC check and payload parsing
 	payload_layer_msg_t * pld = &uart->rx_pld_msg;
 	int rc = dartt_frame_to_payload(&uart->rx_decode_alias, TYPE_SERIAL_MESSAGE, PAYLOAD_ALIAS, pld);
+	uart->rx_decoded.length = 0;	//unconditionally invalidate decoded cobs frame after F2P call to avoid repeated f2p calls/failures
 	if(rc != DARTT_PROTOCOL_SUCCESS)
 	{
 		return rc;
 	}
-	uart->rx_decoded.length = 0;	//after f2p called, invalidate the original cobs decoded message. dartt frame is stale too, but not necessary to invalidate. pld contains the proper message
 
 	if(pld->address == misc_address)
 	{
