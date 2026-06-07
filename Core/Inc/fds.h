@@ -21,8 +21,6 @@ typedef struct fds_t
 	uint32_t baud;
 }fds_t;
 
-extern fds_t fs_settings;
-
 /*block erases the last page of memory and writes whatever shit you like to it.
  *
  * Note: calling this with words = NULL and num_words = 0
