@@ -16,12 +16,11 @@ typedef struct dartt_map_t
 
 	uint16_t sin;
 	uint16_t cos;	//these pad to 1
+	uint32_t tick;
 
 	uint32_t action_flag;
 
 	fds_t fds;
-
-	uint32_t tick;
 }dartt_map_t;
 
 extern dartt_map_t gl_dp;
