@@ -167,6 +167,7 @@ int main(void)
 	MX_ADC1_Init();
 	MX_USART2_UART_Init();
 	eval_encoder_params();
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 1);
 
 	while (1)
 	{
