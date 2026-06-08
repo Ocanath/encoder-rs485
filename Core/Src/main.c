@@ -29,7 +29,7 @@ dartt_mem_t gl_dp_alias = {
 		.size = sizeof(gl_dp)
 };
 
-enum {NO_ACTION = 0, RESTART = 2, BOOTLOAD = 6, LED_ON = 3, LED_OFF = 4};
+enum {NO_ACTION = 0, FS_SAVE = 1, RESTART = 2, BOOTLOAD = 6, LED_ON = 3, LED_OFF = 4};
 
 /*
  * Helper function to load all the fds_mp params
@@ -41,6 +41,14 @@ void load_flash_params(void)
 		m_read_flash((uint32_t*)&gl_dp.fds,sizeof(fds_t)/sizeof(uint32_t));
 	else
 		m_write_flash((uint64_t*)&gl_dp.fds,sizeof(fds_t)/sizeof(uint64_t));
+}
+
+void fs_write_handler(void)
+{
+	if(gl_dp.action_flag == FS_SAVE)
+	{
+		m_write_flash((uint64_t*)&gl_dp.fds,sizeof(fds_t)/sizeof(uint64_t));
+	}
 }
 
 void reset_handler(void)
@@ -104,10 +112,6 @@ int handle_serial_dartt(dma_uart_t * uart, unsigned char misc_address)
 
 	if(pld->address == misc_address)
 	{
-		//TODO: guard this in a dma disable
-		gl_dp.angle = theta_rel_14b();
-		//TODO: guard above
-
 		rc = dartt_parse_general_message(pld, TYPE_SERIAL_MESSAGE, &gl_dp_alias, &uart->tx_buf_alias);
 		if(rc != DARTT_PROTOCOL_SUCCESS)
 		{
@@ -127,9 +131,6 @@ int handle_serial_dartt(dma_uart_t * uart, unsigned char misc_address)
 	}
 	else if(pld->address == gl_dp.fds.address)
 	{
-		//TODO: Guard this with some dma disable?
-		gl_dp.angle = theta_rel_14b();
-		//TODO: see above
 		dartt_buffer_t * txb = &uart->tx_buf_alias;
 		txb->len = 0;
 		txb->buf[txb->len++] = MASTER_MOTOR_ADDRESS;
@@ -174,8 +175,7 @@ int main(void)
 
 	while (1)
 	{
-		//TODO: restructure this so that latency is minimized.
-//		HAL_ADC_Start_DMA(&hadc1, (uint32_t * )gl_dp.dma_adc_raw, NUM_ADC);
+		gl_dp.angle = theta_rel_14b();
 
 		/*Handle DARTT over UART*/
 		handle_serial_dartt(&m_huart2, dartt_misc_address);
@@ -185,6 +185,7 @@ int main(void)
 			reset_handler();
 			bootload_handler();
 			led_handler();
+			fs_write_handler();
 
 			gl_dp.action_flag = NO_ACTION;
 		}
