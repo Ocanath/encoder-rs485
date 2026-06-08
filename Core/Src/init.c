@@ -175,6 +175,8 @@ void MX_USART2_UART_Init(void)
 			gl_uart2_tx_buf,
 			sizeof(gl_uart2_tx_buf)
 	);
+	m_huart2.de_port = GPIOC;//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 1);
+	m_huart2.de_pin = GPIO_PIN_6;
 }
 
 /**
