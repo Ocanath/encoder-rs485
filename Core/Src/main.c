@@ -165,6 +165,9 @@ int main(void)
 	MX_GPIO_Init();
 	MX_DMA_Init();
 	MX_ADC1_Init();
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t * )gl_dp.dma_adc_raw, NUM_ADC);
+	hdma_adc1.Instance->CCR &= ~(1 << 1);	//disable transfer complete interrupt
+	hdma_adc1.Instance->CCR &= ~(1 << 2);	//disable half transfer complete interrupt
 	MX_USART2_UART_Init();
 	eval_encoder_params();
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 1);
@@ -172,7 +175,7 @@ int main(void)
 	while (1)
 	{
 		//TODO: restructure this so that latency is minimized.
-		HAL_ADC_Start_DMA(&hadc1, (uint32_t * )gl_dp.dma_adc_raw, NUM_ADC);
+//		HAL_ADC_Start_DMA(&hadc1, (uint32_t * )gl_dp.dma_adc_raw, NUM_ADC);
 
 		/*Handle DARTT over UART*/
 		handle_serial_dartt(&m_huart2, dartt_misc_address);
