@@ -125,9 +125,9 @@ int handle_serial_dartt(dma_uart_t * uart, unsigned char misc_address)
 			{
 				return rc;
 			}
-			rc = DARTT_PROTOCOL_SUCCESS;	//this will get compiled out - kept for function contract clarity
 			m_uart_dma_transmit(uart);
 		}
+		rc = DARTT_PROTOCOL_SUCCESS;	//this will get compiled out - kept for function contract clarity
 	}
 	else if(pld->address == gl_dp.fds.address)
 	{
