@@ -1,4 +1,6 @@
 /Debug/
+DebugBootloader/
+ReleaseBootloader/
 .settings/language.settings.xml
 .settings
 /Release/
