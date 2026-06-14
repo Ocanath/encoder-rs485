@@ -9,9 +9,7 @@
 #define INC_UART_MEM_H_
 
 #include "m_dma_uart.h"
-
-#define UART_BUF_SIZE 128
-
+#include "uart_config.h"
 
 extern uint8_t gl_uart2_tx_buf[UART_BUF_SIZE];
 extern uint8_t gl_uart2_rx_buf[UART_BUF_SIZE];
