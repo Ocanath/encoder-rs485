@@ -6,7 +6,7 @@
 #include "uart_mem.h"
 #include "tle_encoder.h"
 
-
+extern unsigned char ram_blockstart_keyword_addr__[];
 
 
 dartt_map_t gl_dp = {
@@ -63,6 +63,13 @@ void bootload_handler(void)
 {
 	if(gl_dp.action_flag == BOOTLOAD)
 	{
+		unsigned char * pmagic = (unsigned char *)(ram_blockstart_keyword_addr__);
+		const uint32_t bootloader_unblock = 0xFE47BA32;
+		for(int i = 0; i < sizeof(bootloader_unblock); i++)
+		{
+			int shift = i*8;
+			pmagic[i] = (unsigned char)((bootloader_unblock & (0x000000FF << shift)) >> shift);
+		}
 		//Do ram stuff, magic word
 		NVIC_SystemReset();
 	}
