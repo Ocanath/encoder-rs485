@@ -185,14 +185,14 @@ int main(void)
 		/*Handle DARTT over UART*/
 		handle_serial_dartt(&m_huart2, dartt_misc_address);
 
-		if(gl_dp.action_flag != NO_ACTION)
+		if(gl_dp.action_flag != NO_ACTION_ENCODER)
 		{
 			reset_handler();
 			bootload_handler();
 			led_handler();
 			fs_write_handler();
 
-			gl_dp.action_flag = NO_ACTION;
+			gl_dp.action_flag = NO_ACTION_ENCODER;
 		}
 	}
 }

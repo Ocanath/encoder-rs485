@@ -11,7 +11,7 @@
 
 #define NUM_ADC 2
 
-enum {NO_ACTION = 0, FS_SAVE = 1, RESTART = 2, BOOTLOAD = 6, LED_ON = 3, LED_OFF = 4};
+enum {NO_ACTION_ENCODER = 0, FS_SAVE = 1, RESTART = 2, BOOTLOAD = 6, LED_ON = 3, LED_OFF = 4};
 
 typedef struct fds_t
 {
