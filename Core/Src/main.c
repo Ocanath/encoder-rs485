@@ -143,10 +143,11 @@ int handle_serial_dartt(dma_uart_t * uart, unsigned char misc_address)
 			return rc;	//address filter and validate crc only for motor message
 		}
 		dartt_buffer_t * txb = &uart->tx_buf_alias;
+		int32_t angle_16bit = gl_dp.angle >> 1;
 		txb->len = 0;
 		txb->buf[txb->len++] = MASTER_MOTOR_ADDRESS;
-		txb->buf[txb->len++] = gl_dp.angle & 0xFF;
-		txb->buf[txb->len++] = ((gl_dp.angle & 0xFF00) >> 8);
+		txb->buf[txb->len++] = angle_16bit & 0xFF;
+		txb->buf[txb->len++] = ((angle_16bit & 0xFF00) >> 8);
 		rc = append_crc(txb);
 		if(rc != DARTT_PROTOCOL_SUCCESS)
 		{
