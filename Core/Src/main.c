@@ -29,8 +29,6 @@ dartt_mem_t gl_dp_alias = {
 		.size = sizeof(gl_dp)
 };
 
-enum {NO_ACTION = 0, FS_SAVE = 1, RESTART = 2, BOOTLOAD = 6, LED_ON = 3, LED_OFF = 4};
-
 /*
  * Helper function to load all the fds_mp params
  * Must go before CAN init for can ID to work properly
