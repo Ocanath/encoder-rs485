@@ -105,18 +105,19 @@ int handle_serial_dartt(dma_uart_t * uart, unsigned char misc_address)
 	{
 		return 1;	//TODO: enumerate codes. This is a 'skip, no new message'
 	}
+	uart->rx_decoded.length = 0;	//unconditionally invalidate decoded cobs frame - decode alias is authoritative for parsing
 
-	//both dartt misc and dartt motor messages have [address][payload][crc] for TYPE_SERIAL so F2P is correct for CRC check and payload parsing
-	payload_layer_msg_t * pld = &uart->rx_pld_msg;
-	int rc = dartt_frame_to_payload(&uart->rx_decode_alias, TYPE_SERIAL_MESSAGE, PAYLOAD_ALIAS, pld);
-	uart->rx_decoded.length = 0;	//unconditionally invalidate decoded cobs frame after F2P call to avoid repeated f2p calls/failures
-	if(rc != DARTT_PROTOCOL_SUCCESS)
+	int rc;
+	if(uart->rx_decode_alias.buf[0] == misc_address)
 	{
-		return rc;
-	}
+		//both dartt misc and dartt motor messages have [address][payload][crc] for TYPE_SERIAL so F2P is correct for CRC check and payload parsing
+		payload_layer_msg_t * pld = &uart->rx_pld_msg;
+		rc = dartt_frame_to_payload(&uart->rx_decode_alias, TYPE_SERIAL_MESSAGE, PAYLOAD_ALIAS, pld);
+		if(rc != DARTT_PROTOCOL_SUCCESS)
+		{
+			return rc;
+		}
 
-	if(pld->address == misc_address)
-	{
 		rc = dartt_parse_general_message(pld, TYPE_SERIAL_MESSAGE, &gl_dp_alias, &uart->tx_buf_alias);
 		if(rc != DARTT_PROTOCOL_SUCCESS)
 		{
@@ -134,8 +135,13 @@ int handle_serial_dartt(dma_uart_t * uart, unsigned char misc_address)
 		}
 		rc = DARTT_PROTOCOL_SUCCESS;	//this will get compiled out - kept for function contract clarity
 	}
-	else if(pld->address == gl_dp.fds.address)
+	else if(uart->rx_decode_alias.buf[0] == gl_dp.fds.address)
 	{
+		rc = validate_crc(&uart->rx_decode_alias);
+		if(rc != DARTT_PROTOCOL_SUCCESS)
+		{
+			return rc;	//address filter and validate crc only for motor message
+		}
 		dartt_buffer_t * txb = &uart->tx_buf_alias;
 		txb->len = 0;
 		txb->buf[txb->len++] = MASTER_MOTOR_ADDRESS;
